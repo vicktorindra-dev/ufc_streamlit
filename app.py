@@ -82,8 +82,10 @@ def set_modern_style(ax, transparent=True):
 @st.cache_data
 def load_data():
     # Ganti dengan path file Excel Anda
-    df = pd.read_excel(r"C:\Users\Indra\Desktop\Project\data.xlsx")
+    url = "https://github.com/vicktorindra-dev/ufc_streamlit/raw/refs/heads/main/data.xlsx"
+    df = pd.read_excel(url)
     return df
+    
 df = load_data()
 
 
@@ -1516,3 +1518,4 @@ with tab6:
 st.markdown("---")
 st.markdown("### Data Source: UFC Historical Fight Data")
 st.markdown("Dashboard created with Streamlit • Modern Design Edition")
+
