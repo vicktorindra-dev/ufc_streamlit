@@ -89,6 +89,7 @@ def load_data():
 df = load_data()
 
 
+
 # Custom CSS for styling with blurred background
 st.markdown("""
 <style>
@@ -1119,7 +1120,8 @@ with tab3:
     st.subheader("Fight Locations Map")
 
 # Load data koordinat
-    df2 = pd.read_excel(r"C:\Users\Indra\Desktop\Project\location_coords_full.xlsx")
+    url = "https://github.com/vicktorindra-dev/ufc_streamlit/raw/refs/heads/main/location_coords_full.xlsx"
+    df2 = pd.read_excel(url)
 
     # Pastikan kolom yang diperlukan ada
     if "location" in df2.columns and "latitude" in df2.columns and "longitude" in df2.columns:
@@ -1518,4 +1520,5 @@ with tab6:
 st.markdown("---")
 st.markdown("### Data Source: UFC Historical Fight Data")
 st.markdown("Dashboard created with Streamlit • Modern Design Edition")
+
 
