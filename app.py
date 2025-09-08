@@ -1325,7 +1325,7 @@ with tab4:
             y=[fighter1, fighter2],
             barmode='group',
             title="Fighter Statistics Comparison",
-            color_discrete_map={fighter1: "blue", fighter2: "red"}  # warna sesuai fighter
+            color_discrete_map={fighter1: "red", fighter2: "blue"}  # warna sesuai fighter
         )
         st.plotly_chart(fig, width='stretch')  # Full width
 
