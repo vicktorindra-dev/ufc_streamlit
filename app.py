@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 
-
-
-
 # Set page configurations
 st.set_page_config(
     page_title="UFC Fight Analysis Dashboard",
@@ -87,8 +84,6 @@ def load_data():
     return df
     
 df = load_data()
-
-
 
 # Custom CSS for styling with blurred background
 st.markdown("""
@@ -328,7 +323,6 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "Fighter Comparison", "Custom Analysis", "Data Overview"
 ])
 
-
 with tab1:
     st.header("Fight Overview")
     
@@ -372,7 +366,7 @@ with tab1:
                     f'{value}', ha='center', va='bottom', color='white', fontweight='bold')
 
             ax = set_modern_style(ax)
-            st.pyplot(fig, use_container_width=True)  # Gunakan use_container_width
+            st.pyplot(fig, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
 
     with col2:
         st.subheader("Winners by KO/TKO")
@@ -420,7 +414,7 @@ with tab1:
             ax2.axis('equal')
             
             ax2 = set_modern_style(ax2)
-            st.pyplot(fig2, use_container_width=True)
+            st.pyplot(fig2, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
         else:
             st.info("No KO/TKO wins found in the selected filters.")
     
@@ -525,7 +519,7 @@ with tab1:
         
         # Atur style modern dengan teks putih
         ax = set_modern_style(ax)
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
 
 
     with col4:
@@ -565,7 +559,7 @@ with tab1:
         
         # Atur style modern dengan teks putih
         ax = set_modern_style(ax)
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
 
 
 
@@ -1154,165 +1148,309 @@ with tab3:
     
 
 with tab4:
-    st.header("Fighter Comparison")
-    
+    # Add the necessary imports at the top of the tab
+    import plotly.graph_objects as go
+    import plotly.express as px
+    import matplotlib.pyplot as plt
+    import numpy as np
+   
+    st.header("🥊 Fighter Comparison")
+
     # Select fighters to compare
     all_fighters = sorted(pd.concat([filtered_df['r_name'], filtered_df['b_name']]).unique())
-    
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
         fighter1 = st.selectbox("Select Fighter 1", options=all_fighters, index=0, key="fighter1_select")
-    
+
     with col2:
         other_fighters = [f for f in all_fighters if f != fighter1]
         fighter2 = st.selectbox("Select Fighter 2", options=other_fighters, index=0, key="fighter2_select")
-    
-    # Get fighter stats function
+
+    # Get fighter stats function with error handling
     def get_fighter_stats(fighter_name):
         red_fights = filtered_df[filtered_df['r_name'] == fighter_name]
         blue_fights = filtered_df[filtered_df['b_name'] == fighter_name]
         
         total_fights = len(red_fights) + len(blue_fights)
         wins = len(red_fights[red_fights['winner'] == fighter_name]) + len(blue_fights[blue_fights['winner'] == fighter_name])
+        losses = total_fights - wins
         
+        # Striking stats with error handling
         avg_sig_strikes = (red_fights['r_sig_str_landed'].sum() + blue_fights['b_sig_str_landed'].sum()) / total_fights if total_fights > 0 else 0
         avg_total_strikes = (red_fights['r_total_str_landed'].sum() + blue_fights['b_total_str_landed'].sum()) / total_fights if total_fights > 0 else 0
-        avg_takedowns = (red_fights['r_td_landed'].sum() + blue_fights['b_td_landed'].sum()) / total_fights if total_fights > 0 else 0
+        
+        # Calculate strike accuracy only if attempted columns exist
+        sig_strike_accuracy = 0
+        if 'r_sig_str_attempted' in filtered_df.columns and 'b_sig_str_attempted' in filtered_df.columns:
+            total_attempted = (red_fights['r_sig_str_attempted'].sum() + blue_fights['b_sig_str_attempted'].sum())
+            total_landed = (red_fights['r_sig_str_landed'].sum() + blue_fights['b_sig_str_landed'].sum())
+            sig_strike_accuracy = (total_landed / total_attempted * 100) if total_attempted > 0 else 0
+        else:
+            # Fallback: use simple average if attempted columns don't exist
+            sig_strike_accuracy = avg_sig_strikes  # This is a simple approximation
+        
+        # Grappling stats with error handling
+        avg_takedowns = 0
+        takedown_accuracy = 0
+        if 'r_td_landed' in filtered_df.columns and 'b_td_landed' in filtered_df.columns:
+            avg_takedowns = (red_fights['r_td_landed'].sum() + blue_fights['b_td_landed'].sum()) / total_fights if total_fights > 0 else 0
+            
+            if 'r_td_attempted' in filtered_df.columns and 'b_td_attempted' in filtered_df.columns:
+                total_td_attempted = (red_fights['r_td_attempted'].sum() + blue_fights['b_td_attempted'].sum())
+                total_td_landed = (red_fights['r_td_landed'].sum() + blue_fights['b_td_landed'].sum())
+                takedown_accuracy = (total_td_landed / total_td_attempted * 100) if total_td_attempted > 0 else 0
+        
+        # Defense stats
+        avg_sig_strikes_absorbed = (red_fights['b_sig_str_landed'].sum() + blue_fights['r_sig_str_landed'].sum()) / total_fights if total_fights > 0 else 0
         
         return {
             'Total Fights': total_fights,
             'Wins': wins,
+            'Losses': losses,
             'Win Percentage': (wins / total_fights * 100) if total_fights > 0 else 0,
-            'Avg Sig Strikes': avg_sig_strikes,
-            'Avg Total Strikes': avg_total_strikes,
-            'Avg Takedowns': avg_takedowns
+            'Avg Sig Strikes Landed': round(avg_sig_strikes, 1),
+            'Avg Total Strikes Landed': round(avg_total_strikes, 1),
+            'Sig Strike Accuracy %': round(sig_strike_accuracy, 1),
+            'Avg Takedowns Landed': round(avg_takedowns, 1),
+            'Takedown Accuracy %': round(takedown_accuracy, 1),
+            'Avg Sig Strikes Absorbed': round(avg_sig_strikes_absorbed, 1)
         }
-    
+
     stats1 = get_fighter_stats(fighter1)
     stats2 = get_fighter_stats(fighter2)
-    
-    # Display fighter stats dengan 3 kolom
-    st.subheader("Fighter Statistics")
-    
-    col1, col2, col3 = st.columns(3)
-    
+
+    # Display comparison
+    st.markdown("---")
+    st.subheader(f"Comparison: {fighter1} vs {fighter2}")
+
+    # Key metrics comparison
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("Win %", f"{stats1['Win Percentage']:.1f}%", 
+                f"{stats1['Win Percentage'] - stats2['Win Percentage']:.1f}%")
+    with col2:
+        st.metric("Avg Sig Strikes", f"{stats1['Avg Sig Strikes Landed']:.1f}", 
+                f"{stats1['Avg Sig Strikes Landed'] - stats2['Avg Sig Strikes Landed']:.1f}")
+    with col3:
+        st.metric("TD Accuracy", f"{stats1['Takedown Accuracy %']:.1f}%", 
+                f"{stats1['Takedown Accuracy %'] - stats2['Takedown Accuracy %']:.1f}%")
+    with col4:
+        st.metric("Strike Accuracy", f"{stats1['Sig Strike Accuracy %']:.1f}%", 
+                f"{stats1['Sig Strike Accuracy %'] - stats2['Sig Strike Accuracy %']:.1f}%")
+
+    # Radar chart for skill comparison (only include available metrics)
+    available_categories = []
+    for cat in ['Win Percentage', 'Avg Sig Strikes Landed', 'Sig Strike Accuracy %', 
+                'Avg Takedowns Landed', 'Takedown Accuracy %']:
+        if stats1.get(cat, 0) is not None and stats2.get(cat, 0) is not None:
+            available_categories.append(cat)
+
+    if available_categories:
+        st.markdown("### Skills Comparison Radar")
+        fig_radar = go.Figure()
+
+        fig_radar.add_trace(go.Scatterpolar(
+            r=[stats1[cat] for cat in available_categories],
+            theta=available_categories,
+            fill='toself',
+            name=fighter1
+        ))
+
+        fig_radar.add_trace(go.Scatterpolar(
+            r=[stats2[cat] for cat in available_categories],
+            theta=available_categories,
+            fill='toself',
+            name=fighter2
+        ))
+
+        fig_radar.update_layout(
+            polar=dict(
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, max(max([stats1[cat] for cat in available_categories]), 
+                                max([stats2[cat] for cat in available_categories])) * 1.2]
+                )),
+            showlegend=True
+        )
+        st.plotly_chart(fig_radar, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
+
+    # Detailed stats comparison
+    st.markdown("### Detailed Statistics")
+
+    col1, col2 = st.columns(2)
+
     with col1:
         st.subheader(fighter1)
-        st.metric("Total Fights", stats1['Total Fights'])
-        st.metric("Wins", stats1['Wins'])
-        st.metric("Win Percentage", f"{stats1['Win Percentage']:.1f}%")
-        st.metric("Avg Sig Strikes", f"{stats1['Avg Sig Strikes']:.1f}")
-        st.metric("Avg Total Strikes", f"{stats1['Avg Total Strikes']:.1f}")
-        st.metric("Avg Takedowns", f"{stats1['Avg Takedowns']:.1f}")
-        
+        st.write(f"**Record:** {stats1['Wins']}W - {stats1['Losses']}L")
+        st.write(f"**Total Fights:** {stats1['Total Fights']}")
+        st.write(f"**Avg Significant Strikes:** {stats1['Avg Sig Strikes Landed']}")
+        st.write(f"**Strike Accuracy:** {stats1['Sig Strike Accuracy %']}%")
+        st.write(f"**Avg Takedowns:** {stats1['Avg Takedowns Landed']}")
+        st.write(f"**Takedown Accuracy:** {stats1['Takedown Accuracy %']}%")
+        st.write(f"**Avg Strikes Absorbed:** {stats1['Avg Sig Strikes Absorbed']}")
+
     with col2:
         st.subheader(fighter2)
-        st.metric("Total Fights", stats2['Total Fights'])
-        st.metric("Wins", stats2['Wins'])
-        st.metric("Win Percentage", f"{stats2['Win Percentage']:.1f}%")
-        st.metric("Avg Sig Strikes", f"{stats2['Avg Sig Strikes']:.1f}")
-        st.metric("Avg Total Strikes", f"{stats2['Avg Total Strikes']:.1f}")
-        st.metric("Avg Takedowns", f"{stats2['Avg Takedowns']:.1f}")
-    
-    with col3:
-        st.subheader("Comparison")
-        # Hitung selisih dan tentukan warna delta
-        win_percentage_diff = stats2['Win Percentage'] - stats1['Win Percentage']
-        sig_strikes_diff = stats2['Avg Sig Strikes'] - stats1['Avg Sig Strikes']
-        total_strikes_diff = stats2['Avg Total Strikes'] - stats1['Avg Total Strikes']
-        takedowns_diff = stats2['Avg Takedowns'] - stats1['Avg Takedowns']
-        
-        # Tampilkan metrik dengan delta
-        st.metric("Win % Difference", f"{stats2['Win Percentage']:.1f}%", 
-                 delta=f"{win_percentage_diff:.1f}%",
-                 delta_color="normal" if win_percentage_diff >= 0 else "inverse")
-        
-        st.metric("Sig Strikes Difference", f"{stats2['Avg Sig Strikes']:.1f}",
-                 delta=f"{sig_strikes_diff:.1f}",
-                 delta_color="normal" if sig_strikes_diff >= 0 else "inverse")
-        
-        st.metric("Total Strikes Difference", f"{stats2['Avg Total Strikes']:.1f}",
-                 delta=f"{total_strikes_diff:.1f}",
-                 delta_color="normal" if total_strikes_diff >= 0 else "inverse")
-        
-        st.metric("Takedowns Difference", f"{stats2['Avg Takedowns']:.1f}",
-                 delta=f"{takedowns_diff:.1f}",
-                 delta_color="normal" if takedowns_diff >= 0 else "inverse")
-        
-        # Ringkasan perbandingan
-        st.markdown("---")
-        if win_percentage_diff > 0:
-            st.success(f"**{fighter2}** has better win percentage by {win_percentage_diff:.1f}%")
-        elif win_percentage_diff < 0:
-            st.error(f"**{fighter1}** has better win percentage by {abs(win_percentage_diff):.1f}%")
-        else:
-            st.info("Both fighters have equal win percentage")
-    
-    # Radar chart for comparison
-    st.subheader("Performance Radar Comparison")
-    
-    categories = ['Win Percentage', 'Avg Sig Strikes', 'Avg Total Strikes', 'Avg Takedowns']
-    stats1_values = [stats1['Win Percentage'], stats1['Avg Sig Strikes'], stats1['Avg Total Strikes'], stats1['Avg Takedowns']]
-    stats2_values = [stats2['Win Percentage'], stats2['Avg Sig Strikes'], stats2['Avg Total Strikes'], stats2['Avg Takedowns']]
-    
-    # Normalize values for radar chart
-    max_values = [max(stats1_values[i], stats2_values[i]) for i in range(len(categories))]
-    normalized_stats1 = [stats1_values[i] / max_values[i] * 100 if max_values[i] > 0 else 0 for i in range(len(categories))]
-    normalized_stats2 = [stats2_values[i] / max_values[i] * 100 if max_values[i] > 0 else 0 for i in range(len(categories))]
-    
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-    fig.patch.set_facecolor('none')
-    
-    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
-    angles += angles[:1]  # Close the circle
-    
-    normalized_stats1 += normalized_stats1[:1]
-    normalized_stats2 += normalized_stats2[:1]
-    
-    ax.plot(angles, normalized_stats1, 'o-', linewidth=2, label=fighter1, color='#ff6b6b')
-    ax.fill(angles, normalized_stats1, alpha=0.25, color='#ff6b6b')
-    
-    ax.plot(angles, normalized_stats2, 'o-', linewidth=2, label=fighter2, color='#4ecdc4')
-    ax.fill(angles, normalized_stats2, alpha=0.25, color='#4ecdc4')
-    
-    ax.set_thetagrids(np.degrees(angles[:-1]), categories)
-    ax.set_ylim(0, 100)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.0), labelcolor='white')
-    ax.set_title('Fighter Performance Comparison', fontweight='bold', color='white', pad=20)
-    
-    # Atur style modern dengan teks putih
-    ax.tick_params(colors='white')
-    ax.xaxis.label.set_color('white')
-    ax.yaxis.label.set_color('white')
-    
-    st.pyplot(fig)
+        st.write(f"**Record:** {stats2['Wins']}W - {stats2['Losses']}L")
+        st.write(f"**Total Fights:** {stats2['Total Fights']}")
+        st.write(f"**Avg Significant Strikes:** {stats2['Avg Sig Strikes Landed']}")
+        st.write(f"**Strike Accuracy:** {stats2['Sig Strike Accuracy %']}%")
+        st.write(f"**Avg Takedowns:** {stats2['Avg Takedowns Landed']}")
+        st.write(f"**Takedown Accuracy:** {stats2['Takedown Accuracy %']}%")
+        st.write(f"**Avg Strikes Absorbed:** {stats2['Avg Sig Strikes Absorbed']}")
 
-    # Tambahkan analisis head-to-head
-    st.subheader("Head-to-Head Analysis")
-    
-    # Cari pertarungan langsung antara kedua fighter
-    head_to_head = filtered_df[
-        ((filtered_df['r_name'] == fighter1) & (filtered_df['b_name'] == fighter2)) |
-        ((filtered_df['r_name'] == fighter2) & (filtered_df['b_name'] == fighter1))
-    ]
-    
-    if len(head_to_head) > 0:
-        st.write(f"**Head-to-Head Record: {len(head_to_head)} fight(s)**")
+    # Bar chart comparison
+    st.markdown("### Statistical Comparison")
+
+    # Only include metrics that have values
+    comparison_metrics = []
+    for metric in ['Win Percentage', 'Avg Sig Strikes Landed', 'Sig Strike Accuracy %', 
+                'Avg Takedowns Landed', 'Takedown Accuracy %']:
+        if stats1.get(metric, 0) is not None and stats2.get(metric, 0) is not None:
+            comparison_metrics.append(metric)
+
+    comparison_df = pd.DataFrame({
+        'Metric': comparison_metrics,
+        fighter1: [stats1[metric] for metric in comparison_metrics],
+        fighter2: [stats2[metric] for metric in comparison_metrics]
+    })
+
+    if not comparison_df.empty:
+        fig = px.bar(
+            comparison_df,
+            x='Metric',
+            y=[fighter1, fighter2],
+            barmode='group',
+            title="Fighter Statistics Comparison",
+            color_discrete_map={fighter1: "blue", fighter2: "red"}  # warna sesuai fighter
+        )
+        st.plotly_chart(fig, width='stretch')  # Full width
+
+    st.markdown("---")
+    st.subheader("Strike Accuracy by Position")
+
+    def get_fighter_accuracy_stats(fighter_name):
+        red_fights = filtered_df[filtered_df['r_name'] == fighter_name]
+        blue_fights = filtered_df[filtered_df['b_name'] == fighter_name]
         
-        for idx, fight in head_to_head.iterrows():
-            winner = fight['winner']
-            method = fight['method']
-            event = fight['event_name']
-            date = fight['date'].strftime('%Y-%m-%d') if pd.notna(fight['date']) else "Unknown date"
-            
-            if winner == fighter1:
-                st.success(f"🏆 **{fighter1}** defeated {fighter2} by {method} at {event} ({date})")
+        total_fights = len(red_fights) + len(blue_fights)
+        
+        if total_fights == 0:
+            return {key: 0 for key in ['head_accuracy', 'body_accuracy', 'leg_accuracy', 
+                                    'dist_accuracy', 'clinch_accuracy', 'ground_accuracy']}
+        
+        # Calculate average accuracy for each position with error handling
+        accuracy_stats = {}
+        accuracy_columns = {
+            'head_accuracy': ['r_landed_head_per', 'b_landed_head_per'],
+            'body_accuracy': ['r_landed_body_per', 'b_landed_body_per'],
+            'leg_accuracy': ['r_landed_leg_per', 'b_landed_leg_per'],
+            'dist_accuracy': ['r_landed_dist_per', 'b_landed_dist_per'],
+            'clinch_accuracy': ['r_landed_clinch_per', 'b_landed_clinch_per'],
+            'ground_accuracy': ['r_landed_ground_per', 'b_landed_ground_per']
+        }
+        
+        for stat_key, columns in accuracy_columns.items():
+            if all(col in filtered_df.columns for col in columns):
+                red_sum = red_fights[columns[0]].sum()
+                blue_sum = blue_fights[columns[1]].sum()
+                accuracy_stats[stat_key] = (red_sum + blue_sum) / total_fights
             else:
-                st.error(f"🏆 **{fighter2}** defeated {fighter1} by {method} at {event} ({date})")
-    else:
-        st.info("These fighters have not faced each other in the selected data range.")
+                accuracy_stats[stat_key] = 0
+        
+        return accuracy_stats
 
+    # Get accuracy stats for both fighters
+    accuracy1 = get_fighter_accuracy_stats(fighter1)
+    accuracy2 = get_fighter_accuracy_stats(fighter2)
+
+    # Create comparison chart only if we have accuracy data
+    available_categories = []
+    fighter1_acc = []
+    fighter2_acc = []
+
+    accuracy_mapping = {
+        'Head Strikes': 'head_accuracy',
+        'Body Strikes': 'body_accuracy',
+        'Leg Strikes': 'leg_accuracy',
+        'Distance Strikes': 'dist_accuracy',
+        'Clinch Strikes': 'clinch_accuracy',
+        'Ground Strikes': 'ground_accuracy'
+    }
+
+    for display_name, data_key in accuracy_mapping.items():
+        if accuracy1.get(data_key, 0) > 0 or accuracy2.get(data_key, 0) > 0:
+            available_categories.append(display_name)
+            fighter1_acc.append(accuracy1.get(data_key, 0))
+            fighter2_acc.append(accuracy2.get(data_key, 0))
+
+    if available_categories and any(fighter1_acc + fighter2_acc):
+        # Create figure
+        fig_acc, ax_acc = plt.subplots(figsize=(12, 8))
+
+        # Set width of bars
+        bar_width = 0.35
+        x_pos = np.arange(len(available_categories))
+
+        # Create bars
+        bars1 = ax_acc.bar(x_pos - bar_width/2, fighter1_acc, bar_width, 
+                        label=fighter1, alpha=0.8, color='#FF4B4B')
+        bars2 = ax_acc.bar(x_pos + bar_width/2, fighter2_acc, bar_width, 
+                        label=fighter2, alpha=0.8, color='#1F77B4')
+
+        # Add values on top of bars
+        def add_values(bars):
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0:  # Only add text if value is positive
+                    ax_acc.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+                            f'{height:.1f}%', ha='center', va='bottom', 
+                            fontweight='bold', fontsize=9)
+
+        add_values(bars1)
+        add_values(bars2)
+
+        # Customize the chart
+        ax_acc.set_xlabel('Strike Type', fontweight='bold', fontsize=12)
+        ax_acc.set_ylabel('Accuracy Percentage (%)', fontweight='bold', fontsize=12)
+        ax_acc.set_title(f'Strike Accuracy Comparison: {fighter1} vs {fighter2}', 
+                        fontweight='bold', fontsize=14, pad=20)
+        ax_acc.set_xticks(x_pos)
+        ax_acc.set_xticklabels(available_categories, rotation=45, ha='right')
+        ax_acc.legend()
+        ax_acc.grid(True, alpha=0.3, linestyle='--', axis='y')
+
+        # Set y-axis limit
+        max_acc = max(max(fighter1_acc), max(fighter2_acc)) if (fighter1_acc + fighter2_acc) else 100
+        ax_acc.set_ylim(0, max_acc * 1.15 if max_acc > 0 else 100)
+
+        # Adjust layout
+        plt.tight_layout()
+
+        # Display the chart
+        st.pyplot(fig_acc)
+
+        # Additional accuracy metrics in columns
+        st.markdown("### Detailed Accuracy Statistics")
+
+        acc_col1, acc_col2 = st.columns(2)
+
+        with acc_col1:
+            st.subheader(fighter1)
+            for display_name, data_key in accuracy_mapping.items():
+                if accuracy1.get(data_key, 0) > 0:
+                    st.write(f"**{display_name}:** {accuracy1[data_key]:.1f}%")
+
+        with acc_col2:
+            st.subheader(fighter2)
+            for display_name, data_key in accuracy_mapping.items():
+                if accuracy2.get(data_key, 0) > 0:
+                    st.write(f"**{display_name}:** {accuracy2[data_key]:.1f}%")
+    else:
+        st.warning("Strike accuracy data is not available for the selected fighters.")
 
 with tab5:
     st.header("Custom Analysis")
@@ -1452,60 +1590,7 @@ with tab5:
         col1, col2 = st.columns(2)
         
         with col1:
-            x_column = st.selectbox("X-axis Column", options=custom_filtered_df.select_dtypes(include=[np.number]).columns)
-        
-        with col2:
-            y_column = st.selectbox("Y-axis Column", options=custom_filtered_df.select_dtypes(include=[np.number]).columns)
-        
-        title = st.text_input("Chart Title", f"{y_column} vs {x_column}")
-        x_label = st.text_input("X-axis Label", x_column)
-        y_label = st.text_input("Y-axis Label", y_column)
-        
-        if st.button("Generate Scatter Plot"):
-            fig, ax = plt.subplots(figsize=(8, 6))
-            fig.patch.set_facecolor('none')
-            
-            ax.scatter(custom_filtered_df[x_column], custom_filtered_df[y_column], alpha=0.7, color='#ff6b6b', 
-                       edgecolor='white', linewidth=0.5)
-            
-            ax.set_xlabel(x_label, color='white')
-            ax.set_ylabel(y_label, color='white')
-            ax.set_title(title, fontweight='bold', color='white')
-            
-            ax = set_modern_style(ax)
-            st.pyplot(fig)
-    
-    elif chart_type == "Time Series":
-        value_column = st.selectbox("Value Column", options=custom_filtered_df.select_dtypes(include=[np.number]).columns)
-        freq = st.selectbox("Time Frequency", options=['D', 'W', 'M', 'Q', 'Y'])
-        title = st.text_input("Chart Title", f"Time Series of {value_column}")
-        y_label = st.text_input("Y-axis Label", value_column)
-        
-        if st.button("Generate Time Series"):
-            # Ensure date column is datetime
-            data = custom_filtered_df.copy()
-            data['date'] = pd.to_datetime(data['date'])
-            
-            # Resample by frequency
-            time_series = data.set_index('date')[value_column].resample(freq).mean()
-            
-            fig, ax = plt.subplots(figsize=(12, 6))
-            fig.patch.set_facecolor('none')
-            
-            ax.plot(time_series.index, time_series.values, marker='o', 
-                    color='#4ecdc4', linewidth=2, markersize=4)
-            
-            ax.set_xlabel('Date', color='white')
-            ax.set_ylabel(y_label, color='white')
-            ax.set_title(title, fontweight='bold', color='white')
-            
-            # Format x-axis labels untuk time series
-            ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%Y-%m'))
-            plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
-            
-            ax = set_modern_style(ax)
-            st.pyplot(fig)
-
+            x_column = st.selectbox("X-axis Column", options=custom_filtered_df.select_dtypes(include=[np.number]))
 
 with tab6:
     st.header("Data Overview")
@@ -1514,11 +1599,7 @@ with tab6:
 
     st.dataframe(df.sort_values('date', ascending=False))
 
-
-
 # Footer
 st.markdown("---")
 st.markdown("### Data Source: UFC Historical Fight Data")
 st.markdown("Dashboard created with Streamlit • Modern Design Edition")
-
-
