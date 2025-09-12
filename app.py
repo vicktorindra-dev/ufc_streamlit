@@ -4,6 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
+import plotly
+import plotly.graph_objects as go
+import plotly.express as px
 
 # Set page configurations
 st.set_page_config(
@@ -79,8 +82,9 @@ def set_modern_style(ax, transparent=True):
 @st.cache_data
 def load_data():
     # Ganti dengan path file Excel Anda
-    url = "https://github.com/vicktorindra-dev/ufc_streamlit/raw/refs/heads/main/data.xlsx"
-    df = pd.read_excel(url)
+    #url = "https://github.com/vicktorindra-dev/ufc_streamlit/raw/refs/heads/main/data.xlsx"
+    df = pd.read_excel(r"C:\Users\Indra\Desktop\ufc\data3.xlsx")
+    #df = pd.read_excel(url)
     return df
     
 df = load_data()
@@ -366,7 +370,7 @@ with tab1:
                     f'{value}', ha='center', va='bottom', color='white', fontweight='bold')
 
             ax = set_modern_style(ax)
-            st.pyplot(fig, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
+            st.pyplot(fig, use_container_width=True)
 
     with col2:
         st.subheader("Winners by KO/TKO")
@@ -414,7 +418,7 @@ with tab1:
             ax2.axis('equal')
             
             ax2 = set_modern_style(ax2)
-            st.pyplot(fig2, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
+            st.pyplot(fig2, use_container_width=True)
         else:
             st.info("No KO/TKO wins found in the selected filters.")
     
@@ -457,7 +461,7 @@ with tab1:
 
     # Atur style modern dengan teks putih
     ax = set_modern_style(ax)
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
 
 
     col3, col4 = st.columns(2)
@@ -519,7 +523,7 @@ with tab1:
         
         # Atur style modern dengan teks putih
         ax = set_modern_style(ax)
-        st.pyplot(fig, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
+        st.pyplot(fig, use_container_width=True)
 
 
     with col4:
@@ -559,52 +563,52 @@ with tab1:
         
         # Atur style modern dengan teks putih
         ax = set_modern_style(ax)
-        st.pyplot(fig, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
+        st.pyplot(fig, use_container_width=True)
 
 
 
 with tab2:
     st.header("Winning Factor")
-    
-    col1, col2 = st.columns(2)
-
-
-    with col1:
-        st.subheader("Distribution of Fighter Stances")
+       
+    st.subheader("Distribution of Fighter Stances")
         
         # Gabungkan semua stance dari red corner dan blue corner
-        all_stances = pd.concat([filtered_df['r_stance'], filtered_df['b_stance']])
+    all_stances = pd.concat([filtered_df['r_stance'], filtered_df['b_stance']])
         
         # Hitung frekuensi setiap stance
-        stance_counts = all_stances.value_counts()
+    stance_counts = all_stances.value_counts()
         
-        fig1, ax1 = plt.subplots(figsize=(10, 6))
-        fig1.patch.set_facecolor('none')
+    fig1, ax1 = plt.subplots(figsize=(10, 6))
+    fig1.patch.set_facecolor('none')
         
         # Buat bar chart untuk stance
-        bars = ax1.bar(range(len(stance_counts)), stance_counts.values,
+    bars = ax1.bar(range(len(stance_counts)), stance_counts.values,
                     color=plt.cm.viridis(np.linspace(0, 1, len(stance_counts))),
                     alpha=0.8, edgecolor='white', linewidth=1)
         
         # Atur label dan judul
-        ax1.set_xticks(range(len(stance_counts)))
-        ax1.set_xticklabels(stance_counts.index, rotation=45, ha='right')
-        ax1.set_xlabel('Fighting Stance', color='white', fontweight='bold', fontsize=12)
-        ax1.set_ylabel('Frequency', color='white', fontweight='bold', fontsize=12)
-        ax1.set_title('Distribution of Fighter Stances', fontweight='bold', color='white', fontsize=14, pad=20)
+    ax1.set_xticks(range(len(stance_counts)))
+    ax1.set_xticklabels(stance_counts.index, rotation=45, ha='right')
+    ax1.set_xlabel('Fighting Stance', color='white', fontweight='bold', fontsize=12)
+    ax1.set_ylabel('Frequency', color='white', fontweight='bold', fontsize=12)
+    ax1.set_title('Distribution of Fighter Stances', fontweight='bold', color='white', fontsize=14, pad=20)
         
         # Tambahkan nilai di atas setiap bar
-        for bar, value in zip(bars, stance_counts.values):
+    for bar, value in zip(bars, stance_counts.values):
             height = bar.get_height()
             ax1.text(bar.get_x() + bar.get_width()/2., height + 0.1,
                     f'{value}', ha='center', va='bottom', color='white', fontweight='bold', fontsize=10)
         
         # Atur style modern dengan teks putih
-        ax1 = set_modern_style(ax1)
-        st.pyplot(fig1)
+    ax1 = set_modern_style(ax1)
+    st.pyplot(fig1, use_container_width=True)
 
-    with col2:
-        st.subheader("Strike Accuracy by Winner")
+
+    col1, col2 = st.columns(2)
+    
+    with col1:
+
+        st.subheader("Strike Part Accuracy by Winner")
         
         # Buat kolom baru untuk accuracy pemenang
         winner_accuracy_data = []
@@ -615,34 +619,33 @@ with tab2:
                 winner_accuracy_data.append({
                     'head_accuracy': row['r_landed_head_per'],
                     'body_accuracy': row['r_landed_body_per'],
-                    'leg_accuracy': row['r_landed_leg_per'],
-                    'dist_accuracy': row['r_landed_dist_per'],
-                    'clinch_accuracy': row['r_landed_clinch_per'],
-                    'ground_accuracy': row['r_landed_ground_per']
+                    'leg_accuracy': row['r_landed_leg_per']
                 })
             elif row['winner'] == row['b_name']:
                 # Jika pemenang adalah blue corner
                 winner_accuracy_data.append({
                     'head_accuracy': row['b_landed_head_per'],
                     'body_accuracy': row['b_landed_body_per'],
-                    'leg_accuracy': row['b_landed_leg_per'],
-                    'dist_accuracy': row['b_landed_dist_per'],
-                    'clinch_accuracy': row['b_landed_clinch_per'],
-                    'ground_accuracy': row['b_landed_ground_per']
+                    'leg_accuracy': row['b_landed_leg_per']
+
                 })
         
         # Convert to DataFrame
         winner_accuracy_df = pd.DataFrame(winner_accuracy_data)
         
-        # Hitung rata-rata untuk setiap kategori
-        avg_accuracy = winner_accuracy_df.mean()
+        # Hanya ambil kolom yang diinginkan (head, body, leg)
+        selected_columns = ['head_accuracy', 'body_accuracy', 'leg_accuracy']
+        filtered_accuracy_df = winner_accuracy_df[selected_columns]
+        
+        # Hitung rata-rata untuk setiap kategori yang dipilih
+        avg_accuracy = filtered_accuracy_df.mean()
         
         # Buat bar chart
         fig2, ax2 = plt.subplots(figsize=(10, 6))
         fig2.patch.set_facecolor('none')
         
-        # Kategori dan nilai
-        categories = ['Head Strikes', 'Body Strikes', 'Leg Strikes', 'Distance Strikes', 'Clinch Strikes', 'Ground Strikes']
+        # Kategori dan nilai (hanya head, body, leg)
+        categories = ['Head Strikes', 'Body Strikes', 'Leg Strikes']
         values = avg_accuracy.values
         
         # Buat bar chart
@@ -655,7 +658,7 @@ with tab2:
         ax2.set_xticklabels(categories, rotation=45, ha='right')
         ax2.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
         ax2.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
-        ax2.set_title('Average Strike Accuracy of Winners', fontweight='bold', color='white', fontsize=14, pad=20)
+        ax2.set_title('Average Part Strike Accuracy of Winners', fontweight='bold', color='white', fontsize=14, pad=20)
         
         # Tambahkan nilai di atas setiap bar
         for bar, value in zip(bars, values):
@@ -672,215 +675,266 @@ with tab2:
         
         # Atur style modern dengan teks putih
         ax2 = set_modern_style(ax2)
-        st.pyplot(fig2)
+        st.pyplot(fig2, use_container_width=True)
 
-    st.subheader("Strike Accuracy: Winners vs Losers")
-    
-    # Kumpulkan data accuracy untuk winners dan losers
-    winner_data = []
-    loser_data = []
-    
-    for _, row in filtered_df.iterrows():
-        if row['winner'] == row['r_name']:
-            # Winner adalah red corner, loser adalah blue corner
-            winner_data.append({
-                'head': row['r_landed_head_per'],
-                'body': row['r_landed_body_per'],
-                'leg': row['r_landed_leg_per'],
-                'dist': row['r_landed_dist_per'],
-                'clinch': row['r_landed_clinch_per'],
-                'ground': row['r_landed_ground_per']
-            })
-            loser_data.append({
-                'head': row['b_landed_head_per'],
-                'body': row['b_landed_body_per'],
-                'leg': row['b_landed_leg_per'],
-                'dist': row['b_landed_dist_per'],
-                'clinch': row['b_landed_clinch_per'],
-                'ground': row['b_landed_ground_per']
-            })
-        else:
-            # Winner adalah blue corner, loser adalah red corner
-            winner_data.append({
-                'head': row['b_landed_head_per'],
-                'body': row['b_landed_body_per'],
-                'leg': row['b_landed_leg_per'],
-                'dist': row['b_landed_dist_per'],
-                'clinch': row['b_landed_clinch_per'],
-                'ground': row['b_landed_ground_per']
-            })
-            loser_data.append({
-                'head': row['r_landed_head_per'],
-                'body': row['r_landed_body_per'],
-                'leg': row['r_landed_leg_per'],
-                'dist': row['r_landed_dist_per'],
-                'clinch': row['r_landed_clinch_per'],
-                'ground': row['r_landed_ground_per']
-            })
-    
-    # Convert to DataFrames dan hitung rata-rata
-    winner_avg = pd.DataFrame(winner_data).mean()
-    loser_avg = pd.DataFrame(loser_data).mean()
-    
-    # Buat grouped bar chart
-    fig, ax = plt.subplots(figsize=(14, 6))
-    fig.patch.set_facecolor('none')
-    
-    # Posisi bar
-    x = np.arange(len(winner_avg))
-    width = 0.35
-    
-    # Categories
-    categories = ['Head', 'Body', 'Leg', 'Distance', 'Clinch', 'Ground']
-    
-    # Plot bars
-    bars1 = ax.bar(x - width/2, winner_avg.values, width, 
-                  label='Winners', alpha=0.8, color='#4ecdc4', edgecolor='white')
-    
-    bars2 = ax.bar(x + width/2, loser_avg.values, width, 
-                  label='Losers', alpha=0.8, color='#ff6b6b', edgecolor='white')
-    
-    # Atur label dan judul
-    ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
-    ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
-    ax.set_title('Strike Accuracy: Winners vs Losers', fontweight='bold', color='white', fontsize=16, pad=20)
-    ax.set_xticks(x)
-    ax.set_xticklabels(categories)
-    
-    # Tambahkan legend
-    ax.legend(frameon=False, labelcolor='white')
-    
-    # Tambahkan nilai di atas setiap bar
-    def add_value_labels(bars):
-        for bar in bars:
+    with col2:
+
+        st.subheader("Strike Position Accuracy by Winner")
+        
+        # Buat kolom baru untuk accuracy pemenang
+        winner_accuracy_data = []
+        
+        for _, row in filtered_df.iterrows():
+            if row['winner'] == row['r_name']:
+                # Jika pemenang adalah red corner
+                winner_accuracy_data.append({
+                    'dist_accuracy': row['r_landed_dist_per'],
+                    'clinch_accuracy': row['r_landed_clinch_per'],
+                    'ground_accuracy': row['r_landed_ground_per']
+                })
+            elif row['winner'] == row['b_name']:
+                # Jika pemenang adalah blue corner
+                winner_accuracy_data.append({
+                    'dist_accuracy': row['b_landed_dist_per'],
+                    'clinch_accuracy': row['b_landed_clinch_per'],
+                    'ground_accuracy': row['b_landed_ground_per']
+                })
+        
+        # Convert to DataFrame
+        winner_accuracy_df = pd.DataFrame(winner_accuracy_data)
+        
+        # Hanya ambil kolom yang diinginkan (head, body, leg)
+        selected_columns = ['dist_accuracy', 'clinch_accuracy', 'ground_accuracy']
+        filtered_accuracy_df = winner_accuracy_df[selected_columns]
+        
+        # Hitung rata-rata untuk setiap kategori yang dipilih
+        avg_accuracy = filtered_accuracy_df.mean()
+        
+        # Buat bar chart
+        fig2, ax2 = plt.subplots(figsize=(10, 6))
+        fig2.patch.set_facecolor('none')
+        
+        # Kategori dan nilai (hanya head, body, leg)
+        categories = ['dist_accuracy', 'clinch_accuracy', 'ground_accuracy']
+        values = avg_accuracy.values
+        
+        # Buat bar chart
+        bars = ax2.bar(range(len(categories)), values,
+                    color=plt.cm.viridis(np.linspace(0, 1, len(categories))),
+                    alpha=0.8, edgecolor='white', linewidth=1)
+        
+        # Atur label dan judul
+        ax2.set_xticks(range(len(categories)))
+        ax2.set_xticklabels(categories, rotation=45, ha='right')
+        ax2.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
+        ax2.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
+        ax2.set_title('Average Position Strike Accuracy of Winners', fontweight='bold', color='white', fontsize=14, pad=20)
+        
+        # Tambahkan nilai di atas setiap bar
+        for bar, value in zip(bars, values):
             height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height + 0.5,
-                   f'{height:.1f}%', ha='center', va='bottom', 
-                   color='white', fontweight='bold', fontsize=8)
-    
-    add_value_labels(bars1)
-    add_value_labels(bars2)
-    
-    # Tambahkan grid
-    ax.grid(True, alpha=0.3, linestyle='--', axis='y')
-    
-    # Atur batas y-axis
-    max_value = max(max(winner_avg.values), max(loser_avg.values))
-    ax.set_ylim(0, max_value * 1.15)
-    
-    # Atur style modern dengan teks putih
-    ax = set_modern_style(ax)
-    st.pyplot(fig)
-
-
-
-#BARU NIH
-    st.subheader("Strike Accuracy Comparison by Method")
-    
-    # Pilih multiple methods untuk comparison
-    selected_methods = st.multiselect(
-        "Select Methods to Compare",
-        options=list(filtered_df['method'].unique()),
-        default=list(filtered_df['method'].value_counts().head(3).index)
-    )
-    
-    if selected_methods:
-        # Buat figure untuk semua methods
-        fig, ax = plt.subplots(figsize=(14, 8))
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+                    f'{value:.1f}%', ha='center', va='bottom', 
+                    color='white', fontweight='bold', fontsize=10)
+        
+        # Tambahkan grid
+        ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+        
+        # Atur batas y-axis
+        ax2.set_ylim(0, max(values) * 1.15)
+        
+        # Atur style modern dengan teks putih
+        ax2 = set_modern_style(ax2)
+        st.pyplot(fig2, use_container_width=True)
+#_____________________________________________________________________
+    col3, col4 = st.columns(2)
+        
+    with col3:
+        st.subheader("Strike Accuracy Part: Winners vs Losers")
+        
+        # Kumpulkan data accuracy untuk winners dan losers
+        winner_data = []
+        loser_data = []
+        
+        for _, row in filtered_df.iterrows():
+            if row['winner'] == row['r_name']:
+                # Winner adalah red corner, loser adalah blue corner
+                winner_data.append({
+                    'head': row['r_landed_head_per'],
+                    'body': row['r_landed_body_per'],
+                    'leg': row['r_landed_leg_per']
+                })
+                loser_data.append({
+                    'head': row['b_landed_head_per'],
+                    'body': row['b_landed_body_per'],
+                    'leg': row['b_landed_leg_per']
+                })
+            else:
+                # Winner adalah blue corner, loser adalah red corner
+                winner_data.append({
+                    'head': row['b_landed_head_per'],
+                    'body': row['b_landed_body_per'],
+                    'leg': row['b_landed_leg_per']
+                })
+                loser_data.append({
+                    'head': row['r_landed_head_per'],
+                    'body': row['r_landed_body_per'],
+                    'leg': row['r_landed_leg_per']
+                })
+        
+        # Convert to DataFrames dan hitung rata-rata
+        winner_avg = pd.DataFrame(winner_data).mean()
+        loser_avg = pd.DataFrame(loser_data).mean()
+        
+        # Buat grouped bar chart
+        fig, ax = plt.subplots(figsize=(10, 6))
         fig.patch.set_facecolor('none')
         
-        # Warna untuk setiap method
-        colors = plt.cm.viridis(np.linspace(0, 1, len(selected_methods)))
-        
         # Posisi bar
-        x = np.arange(6)  # 6 kategori strike
-        width = 0.8 / len(selected_methods)  # Lebar bar disesuaikan dengan jumlah methods
+        x = np.arange(len(winner_avg))
+        width = 0.35
         
-        # Plot untuk setiap method
-        for i, method in enumerate(selected_methods):
-            method_df = filtered_df[filtered_df['method'] == method]
-            
-            if len(method_df) > 0:
-                # Kumpulkan data accuracy untuk pemenang
-                accuracy_data = []
-                
-                for _, row in method_df.iterrows():
-                    if row['winner'] == row['r_name']:
-                        accuracy_data.append({
-                            'Head': row['r_landed_head_per'],
-                            'Body': row['r_landed_body_per'],
-                            'Leg': row['r_landed_leg_per'],
-                            'Distance': row['r_landed_dist_per'],
-                            'Clinch': row['r_landed_clinch_per'],
-                            'Ground': row['r_landed_ground_per']
-                        })
-                    else:
-                        accuracy_data.append({
-                            'Head': row['b_landed_head_per'],
-                            'Body': row['b_landed_body_per'],
-                            'Leg': row['b_landed_leg_per'],
-                            'Distance': row['b_landed_dist_per'],
-                            'Clinch': row['b_landed_clinch_per'],
-                            'Ground': row['b_landed_ground_per']
-                        })
-                
-                # Hitung rata-rata
-                accuracy_df = pd.DataFrame(accuracy_data)
-                avg_accuracy = accuracy_df.mean()
-                
-                # Plot bars
-                bars = ax.bar(x + i * width, avg_accuracy.values, width,
-                             label=f'{method} (n={len(method_df)})',
-                             color=colors[i], alpha=0.8, edgecolor='white')
+        # Categories (hanya Head, Body, Leg)
+        categories = ['Head', 'Body', 'Leg']
+        
+        # Plot bars
+        bars1 = ax.bar(x - width/2, winner_avg.values, width, 
+                    label='Winners', alpha=0.8, color='#4ecdc4', edgecolor='white')
+        
+        bars2 = ax.bar(x + width/2, loser_avg.values, width, 
+                    label='Losers', alpha=0.8, color='#ff6b6b', edgecolor='white')
         
         # Atur label dan judul
         ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
         ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
-        ax.set_title('Strike Accuracy Comparison by Method', fontweight='bold', color='white', fontsize=16, pad=20)
-        ax.set_xticks(x + width * (len(selected_methods) - 1) / 2)
-        ax.set_xticklabels(['Head', 'Body', 'Leg', 'Distance', 'Clinch', 'Ground'])
+        ax.set_title('Strike Accuracy: Winners vs Losers', fontweight='bold', color='white', fontsize=14, pad=20)
+        ax.set_xticks(x)
+        ax.set_xticklabels(categories)
         
         # Tambahkan legend
-        ax.legend(frameon=False, labelcolor='white', bbox_to_anchor=(1.05, 1), loc='upper left')
+        ax.legend(frameon=False, labelcolor='white')
+        
+        # Tambahkan nilai di atas setiap bar
+        def add_value_labels(bars):
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+                    f'{height:.1f}%', ha='center', va='bottom', 
+                    color='white', fontweight='bold', fontsize=10)
+        
+        add_value_labels(bars1)
+        add_value_labels(bars2)
         
         # Tambahkan grid
         ax.grid(True, alpha=0.3, linestyle='--', axis='y')
         
+        # Atur batas y-axis
+        max_value = max(max(winner_avg.values), max(loser_avg.values))
+        ax.set_ylim(0, max_value * 1.15)
+        
         # Atur style modern dengan teks putih
         ax = set_modern_style(ax)
-        st.pyplot(fig)
+        st.pyplot(fig, use_container_width=True)
+
+    with col4:
+        st.subheader("Strike Accuracy Position: Winners vs Losers")
         
-    else:
-        st.info("Please select at least one method to compare.")
-
-    st.subheader("Strike Accuracy Comparison by Method and Fight Duration")
-
-    # Pilih multiple methods untuk comparison - TAMBAHKAN KEY UNIK
-    selected_methods = st.multiselect(
-        "Select Methods to Compare",
-        options=list(filtered_df['method'].unique()),
-        default=list(filtered_df['method'].value_counts().head(3).index),
-        key="method_comparison_multiselect"  # KEY UNIK DITAMBAHKAN DI SINI
-    )
-
-    # Filter berdasarkan durasi pertandingan
-    min_time, max_time = st.slider(
-        "Select Fight Duration Range (seconds)",
-        min_value=int(filtered_df['match_time_sec'].min()),
-        max_value=int(filtered_df['match_time_sec'].max()),
-        value=(int(filtered_df['match_time_sec'].min()), int(filtered_df['match_time_sec'].max())),
-        key="fight_duration_slider"  # KEY UNIK DITAMBAHKAN DI SINI
-    )
-
-    if selected_methods:
-        # Filter data berdasarkan metode dan durasi
-        filtered_by_method = filtered_df[
-            (filtered_df['method'].isin(selected_methods)) &
-            (filtered_df['match_time_sec'] >= min_time) &
-            (filtered_df['match_time_sec'] <= max_time)
-        ]
+        # Kumpulkan data accuracy untuk winners dan losers
+        winner_data = []
+        loser_data = []
         
-        if len(filtered_by_method) > 0:
+        for _, row in filtered_df.iterrows():
+            if row['winner'] == row['r_name']:
+                # Winner adalah red corner, loser adalah blue corner
+                winner_data.append({
+                    'dist': row['r_landed_dist_per'],
+                    'clinch': row['r_landed_clinch_per'],
+                    'ground': row['r_landed_ground_per']
+                })
+                loser_data.append({
+                    'dist': row['b_landed_dist_per'],
+                    'clinch': row['b_landed_clinch_per'],
+                    'ground': row['b_landed_ground_per']
+                })
+            else:
+                # Winner adalah blue corner, loser adalah red corner
+                winner_data.append({
+                    'dist': row['r_landed_dist_per'],
+                    'clinch': row['r_landed_clinch_per'],
+                    'ground': row['r_landed_ground_per']
+                })
+                loser_data.append({
+                    'dist': row['r_landed_dist_per'],
+                    'clinch': row['r_landed_clinch_per'],
+                    'ground': row['r_landed_ground_per']
+                })
+        
+        # Convert to DataFrames dan hitung rata-rata
+        winner_avg = pd.DataFrame(winner_data).mean()
+        loser_avg = pd.DataFrame(loser_data).mean()
+        
+        # Buat grouped bar chart
+        fig, ax = plt.subplots(figsize=(10, 6))
+        fig.patch.set_facecolor('none')
+        
+        # Posisi bar
+        x = np.arange(len(winner_avg))
+        width = 0.35
+        
+        # Categories (hanya Head, Body, Leg)
+        categories = ['Distance', 'Clinch', 'Ground']
+        
+        # Plot bars
+        bars1 = ax.bar(x - width/2, winner_avg.values, width, 
+                    label='Winners', alpha=0.8, color='#4ecdc4', edgecolor='white')
+        
+        bars2 = ax.bar(x + width/2, loser_avg.values, width, 
+                    label='Losers', alpha=0.8, color='#ff6b6b', edgecolor='white')
+        
+        # Atur label dan judul
+        ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
+        ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
+        ax.set_title('Strike Accuracy: Winners vs Losers', fontweight='bold', color='white', fontsize=14, pad=20)
+        ax.set_xticks(x)
+        ax.set_xticklabels(categories)
+        
+        # Tambahkan legend
+        ax.legend(frameon=False, labelcolor='white')
+        
+        # Tambahkan nilai di atas setiap bar
+        def add_value_labels(bars):
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+                    f'{height:.1f}%', ha='center', va='bottom', 
+                    color='white', fontweight='bold', fontsize=10)
+        
+        add_value_labels(bars1)
+        add_value_labels(bars2)
+        
+        # Tambahkan grid
+        ax.grid(True, alpha=0.3, linestyle='--', axis='y')
+        
+        # Atur batas y-axis
+        max_value = max(max(winner_avg.values), max(loser_avg.values))
+        ax.set_ylim(0, max_value * 1.15)
+        
+        # Atur style modern dengan teks putih
+        ax = set_modern_style(ax)
+        st.pyplot(fig, use_container_width=True)
+
+
+    col5, col6 = st.columns(2)
+        
+    with col5:
+        st.subheader("Strike Accuracy Part Comparison by Method")
+        selected_methods = st.multiselect(
+            "Select Methods to Compare to",
+            options=list(filtered_df['method'].unique()),
+            default=list(filtered_df['method'].value_counts().head(3).index)
+        )
+        
+        if selected_methods:
             # Buat figure untuk semua methods
             fig, ax = plt.subplots(figsize=(14, 8))
             fig.patch.set_facecolor('none')
@@ -888,60 +942,47 @@ with tab2:
             # Warna untuk setiap method
             colors = plt.cm.viridis(np.linspace(0, 1, len(selected_methods)))
             
-            # Kategori strike
-            strike_categories = ['Head', 'Body', 'Leg', 'Distance', 'Clinch', 'Ground']
-            strike_columns = ['landed_head_per', 'landed_body_per', 'landed_leg_per', 
-                            'landed_dist_per', 'landed_clinch_per', 'landed_ground_per']
-            
             # Posisi bar
-            x = np.arange(len(strike_categories))
-            width = 0.8 / len(selected_methods)
+            x = np.arange(3)  # 6 kategori strike
+            width = 0.8 / len(selected_methods)  # Lebar bar disesuaikan dengan jumlah methods
             
             # Plot untuk setiap method
             for i, method in enumerate(selected_methods):
-                method_df = filtered_by_method[filtered_by_method['method'] == method]
+                method_df = filtered_df[filtered_df['method'] == method]
                 
                 if len(method_df) > 0:
                     # Kumpulkan data accuracy untuk pemenang
-                    accuracy_data = {category: [] for category in strike_categories}
+                    accuracy_data = []
                     
                     for _, row in method_df.iterrows():
-                        # Tentukan apakah pemenang di red atau blue corner
                         if row['winner'] == row['r_name']:
-                            # Pemenang adalah red corner
-                            prefix = 'r_'
+                            accuracy_data.append({
+                                'Head': row['r_landed_head_per'],
+                                'Body': row['r_landed_body_per'],
+                                'Leg': row['r_landed_leg_per']
+                            })
                         else:
-                            # Pemenang adalah blue corner
-                            prefix = 'b_'
-                        
-                        # Kumpulkan data accuracy untuk setiap kategori strike
-                        for category, column in zip(strike_categories, strike_columns):
-                            col_name = prefix + column
-                            if col_name in row and pd.notna(row[col_name]):
-                                accuracy_data[category].append(row[col_name])
+                            accuracy_data.append({
+                                'Head': row['b_landed_head_per'],
+                                'Body': row['b_landed_body_per'],
+                                'Leg': row['b_landed_leg_per']
+                            })
                     
-                    # Hitung rata-rata untuk setiap kategori
-                    avg_accuracy = [np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
-                                for category in strike_categories]
+                    # Hitung rata-rata
+                    accuracy_df = pd.DataFrame(accuracy_data)
+                    avg_accuracy = accuracy_df.mean()
                     
                     # Plot bars
-                    bars = ax.bar(x + i * width, avg_accuracy, width,
+                    bars = ax.bar(x + i * width, avg_accuracy.values, width,
                                 label=f'{method} (n={len(method_df)})',
                                 color=colors[i], alpha=0.8, edgecolor='white')
-                    
-                    # Tambahkan nilai di atas setiap bar
-                    for j, value in enumerate(avg_accuracy):
-                        if value > 0:  # Hanya tambahkan teks jika nilai > 0
-                            ax.text(x[j] + i * width, value + 0.5, f'{value:.1f}%', 
-                                ha='center', va='bottom', color='white', fontweight='bold', fontsize=8)
             
             # Atur label dan judul
             ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
             ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
-            ax.set_title(f'Strike Accuracy Comparison by Method\n(Fight Duration: {min_time}-{max_time} seconds)', 
-                        fontweight='bold', color='white', fontsize=16, pad=20)
+            ax.set_title('Strike Accuracy Comparison by Method', fontweight='bold', color='white', fontsize=16, pad=20)
             ax.set_xticks(x + width * (len(selected_methods) - 1) / 2)
-            ax.set_xticklabels(strike_categories)
+            ax.set_xticklabels(['Head', 'Body', 'Leg'])
             
             # Tambahkan legend
             ax.legend(frameon=False, labelcolor='white', bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -949,77 +990,417 @@ with tab2:
             # Tambahkan grid
             ax.grid(True, alpha=0.3, linestyle='--', axis='y')
             
-            # Atur batas y-axis
-            max_val = 0
-            for method in selected_methods:
-                method_df = filtered_by_method[filtered_by_method['method'] == method]
+            # Atur style modern dengan teks putih
+            ax = set_modern_style(ax)
+            st.pyplot(fig, use_container_width=True)
+            
+        else:
+            st.info("Please select at least one method to compare.")
+
+    with col6:
+        st.subheader("Strike Accuracy Position Comparison by Method")
+        
+        # Pilih multiple methods untuk comparison
+        selected_methods = st.multiselect(
+            "Select Methods to Compare",
+            options=list(filtered_df['method'].unique()),
+            default=list(filtered_df['method'].value_counts().head(3).index)
+        )
+        
+        if selected_methods:
+            # Buat figure untuk semua methods
+            fig, ax = plt.subplots(figsize=(14, 8))
+            fig.patch.set_facecolor('none')
+            
+            # Warna untuk setiap method
+            colors = plt.cm.viridis(np.linspace(0, 1, len(selected_methods)))
+            
+            # Posisi bar
+            x = np.arange(3)  # 6 kategori strike
+            width = 0.8 / len(selected_methods)  # Lebar bar disesuaikan dengan jumlah methods
+            
+            # Plot untuk setiap method
+            for i, method in enumerate(selected_methods):
+                method_df = filtered_df[filtered_df['method'] == method]
+                
                 if len(method_df) > 0:
-                    accuracy_data = {category: [] for category in strike_categories}
+                    # Kumpulkan data accuracy untuk pemenang
+                    accuracy_data = []
                     
                     for _, row in method_df.iterrows():
                         if row['winner'] == row['r_name']:
-                            prefix = 'r_'
+                            accuracy_data.append({
+                                'Distance': row['r_landed_dist_per'],
+                                'Clinch': row['r_landed_clinch_per'],
+                                'Ground': row['r_landed_ground_per']
+                            })
                         else:
-                            prefix = 'b_'
-                        
-                        for category, column in zip(strike_categories, strike_columns):
-                            col_name = prefix + column
-                            if col_name in row and pd.notna(row[col_name]):
-                                accuracy_data[category].append(row[col_name])
+                            accuracy_data.append({
+                                'Distance': row['r_landed_dist_per'],
+                                'Clinch': row['r_landed_clinch_per'],
+                                'Ground': row['r_landed_ground_per']
+                            })
                     
-                    method_max = max([np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
-                                    for category in strike_categories])
-                    max_val = max(max_val, method_max)
+                    # Hitung rata-rata
+                    accuracy_df = pd.DataFrame(accuracy_data)
+                    avg_accuracy = accuracy_df.mean()
+                    
+                    # Plot bars
+                    bars = ax.bar(x + i * width, avg_accuracy.values, width,
+                                label=f'{method} (n={len(method_df)})',
+                                color=colors[i], alpha=0.8, edgecolor='white')
             
-            ax.set_ylim(0, max_val * 1.2 if max_val > 0 else 100)
+            # Atur label dan judul
+            ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
+            ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
+            ax.set_title('Strike Accuracy Comparison by Method', fontweight='bold', color='white', fontsize=16, pad=20)
+            ax.set_xticks(x + width * (len(selected_methods) - 1) / 2)
+            ax.set_xticklabels(['Distance', 'Clinch', 'Ground'])
+            
+            # Tambahkan legend
+            ax.legend(frameon=False, labelcolor='white', bbox_to_anchor=(1.05, 1), loc='upper left')
+            
+            # Tambahkan grid
+            ax.grid(True, alpha=0.3, linestyle='--', axis='y')
             
             # Atur style modern dengan teks putih
             ax = set_modern_style(ax)
-            st.pyplot(fig)
-            
-            # Tampilkan statistik tambahan
-            st.write(f"**Analysis Summary:**")
-            st.write(f"- Total fights analyzed: {len(filtered_by_method)}")
-            st.write(f"- Fight duration range: {min_time} - {max_time} seconds")
-            
-            # Tabel rata-rata akurasi per metode
-            summary_data = []
-            for method in selected_methods:
-                method_df = filtered_by_method[filtered_by_method['method'] == method]
-                if len(method_df) > 0:
-                    accuracy_data = {category: [] for category in strike_categories}
-                    
-                    for _, row in method_df.iterrows():
-                        if row['winner'] == row['r_name']:
-                            prefix = 'r_'
-                        else:
-                            prefix = 'b_'
-                        
-                        for category, column in zip(strike_categories, strike_columns):
-                            col_name = prefix + column
-                            if col_name in row and pd.notna(row[col_name]):
-                                accuracy_data[category].append(row[col_name])
-                    
-                    avg_values = [np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
-                                for category in strike_categories]
-                    summary_data.append([method, len(method_df)] + avg_values)
-            
-            # Buat DataFrame untuk summary
-            summary_df = pd.DataFrame(summary_data, 
-                                    columns=['Method', 'Fights'] + strike_categories)
-            st.dataframe(summary_df.style.format({
-                'Head': '{:.1f}%',
-                'Body': '{:.1f}%',
-                'Leg': '{:.1f}%',
-                'Distance': '{:.1f}%',
-                'Clinch': '{:.1f}%',
-                'Ground': '{:.1f}%'
-            }))
+            st.pyplot(fig, use_container_width=True)
             
         else:
-            st.warning("No data available for the selected methods and fight duration range.")
-    else:
-        st.info("Please select at least one method to compare.")
+            st.info("Please select at least one method to compare.")
+#________________________________________________________________
+    col7, col8 = st.columns(2)
+    with col7:
+        st.subheader("Accuracy Part Comparison by Method and Fight Duration")
+
+        # Pilih multiple methods untuk comparison - TAMBAHKAN KEY UNIK
+        selected_methods = st.multiselect(
+            "Select Methods to Compare",
+            options=list(filtered_df['method'].unique()),
+            default=list(filtered_df['method'].value_counts().head(3).index),
+            key="method_comparison_multiselect_to"  # KEY UNIK DITAMBAHKAN DI SINI
+        )
+
+        # Filter berdasarkan durasi pertandingan
+        min_time, max_time = st.slider(
+            "Select Fight Duration Range (seconds)",
+            min_value=int(filtered_df['match_time_sec'].min()),
+            max_value=int(filtered_df['match_time_sec'].max()),
+            value=(int(filtered_df['match_time_sec'].min()), int(filtered_df['match_time_sec'].max())),
+            key="fight_duration_slider"  # KEY UNIK DITAMBAHKAN DI SINI
+        )
+
+        if selected_methods:
+            # Filter data berdasarkan metode dan durasi
+            filtered_by_method = filtered_df[
+                (filtered_df['method'].isin(selected_methods)) &
+                (filtered_df['match_time_sec'] >= min_time) &
+                (filtered_df['match_time_sec'] <= max_time)
+            ]
+            
+            if len(filtered_by_method) > 0:
+                # Buat figure untuk semua methods
+                fig, ax = plt.subplots(figsize=(14, 8))
+                fig.patch.set_facecolor('none')
+                
+                # Warna untuk setiap method
+                colors = plt.cm.viridis(np.linspace(0, 1, len(selected_methods)))
+                
+                # Kategori strike
+                strike_categories = ['Head', 'Body', 'Leg']
+                strike_columns = ['landed_head_per', 'landed_body_per', 'landed_leg_per']
+                
+                # Posisi bar
+                x = np.arange(len(strike_categories))
+                width = 0.8 / len(selected_methods)
+                
+                # Plot untuk setiap method
+                for i, method in enumerate(selected_methods):
+                    method_df = filtered_by_method[filtered_by_method['method'] == method]
+                    
+                    if len(method_df) > 0:
+                        # Kumpulkan data accuracy untuk pemenang
+                        accuracy_data = {category: [] for category in strike_categories}
+                        
+                        for _, row in method_df.iterrows():
+                            # Tentukan apakah pemenang di red atau blue corner
+                            if row['winner'] == row['r_name']:
+                                # Pemenang adalah red corner
+                                prefix = 'r_'
+                            else:
+                                # Pemenang adalah blue corner
+                                prefix = 'b_'
+                            
+                            # Kumpulkan data accuracy untuk setiap kategori strike
+                            for category, column in zip(strike_categories, strike_columns):
+                                col_name = prefix + column
+                                if col_name in row and pd.notna(row[col_name]):
+                                    accuracy_data[category].append(row[col_name])
+                        
+                        # Hitung rata-rata untuk setiap kategori
+                        avg_accuracy = [np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
+                                    for category in strike_categories]
+                        
+                        # Plot bars
+                        bars = ax.bar(x + i * width, avg_accuracy, width,
+                                    label=f'{method} (n={len(method_df)})',
+                                    color=colors[i], alpha=0.8, edgecolor='white')
+                        
+                        # Tambahkan nilai di atas setiap bar
+                        for j, value in enumerate(avg_accuracy):
+                            if value > 0:  # Hanya tambahkan teks jika nilai > 0
+                                ax.text(x[j] + i * width, value + 0.5, f'{value:.1f}%', 
+                                    ha='center', va='bottom', color='white', fontweight='bold', fontsize=8)
+                
+                # Atur label dan judul
+                ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
+                ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
+                ax.set_title(f'Strike Accuracy Comparison by Method\n(Fight Duration: {min_time}-{max_time} seconds)', 
+                            fontweight='bold', color='white', fontsize=16, pad=20)
+                ax.set_xticks(x + width * (len(selected_methods) - 1) / 2)
+                ax.set_xticklabels(strike_categories)
+                
+                # Tambahkan legend
+                ax.legend(frameon=False, labelcolor='white', bbox_to_anchor=(1.05, 1), loc='upper left')
+                
+                # Tambahkan grid
+                ax.grid(True, alpha=0.3, linestyle='--', axis='y')
+                
+                # Atur batas y-axis
+                max_val = 0
+                for method in selected_methods:
+                    method_df = filtered_by_method[filtered_by_method['method'] == method]
+                    if len(method_df) > 0:
+                        accuracy_data = {category: [] for category in strike_categories}
+                        
+                        for _, row in method_df.iterrows():
+                            if row['winner'] == row['r_name']:
+                                prefix = 'r_'
+                            else:
+                                prefix = 'b_'
+                            
+                            for category, column in zip(strike_categories, strike_columns):
+                                col_name = prefix + column
+                                if col_name in row and pd.notna(row[col_name]):
+                                    accuracy_data[category].append(row[col_name])
+                        
+                        method_max = max([np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
+                                        for category in strike_categories])
+                        max_val = max(max_val, method_max)
+                
+                ax.set_ylim(0, max_val * 1.2 if max_val > 0 else 100)
+                
+                # Atur style modern dengan teks putih
+                ax = set_modern_style(ax)
+                st.pyplot(fig, use_container_width=True)
+                
+                # Tampilkan statistik tambahan
+                st.write(f"**Analysis Summary:**")
+                st.write(f"- Total fights analyzed: {len(filtered_by_method)}")
+                st.write(f"- Fight duration range: {min_time} - {max_time} seconds")
+                
+                # Tabel rata-rata akurasi per metode
+                summary_data = []
+                for method in selected_methods:
+                    method_df = filtered_by_method[filtered_by_method['method'] == method]
+                    if len(method_df) > 0:
+                        accuracy_data = {category: [] for category in strike_categories}
+                        
+                        for _, row in method_df.iterrows():
+                            if row['winner'] == row['r_name']:
+                                prefix = 'r_'
+                            else:
+                                prefix = 'b_'
+                            
+                            for category, column in zip(strike_categories, strike_columns):
+                                col_name = prefix + column
+                                if col_name in row and pd.notna(row[col_name]):
+                                    accuracy_data[category].append(row[col_name])
+                        
+                        avg_values = [np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
+                                    for category in strike_categories]
+                        summary_data.append([method, len(method_df)] + avg_values)
+                
+                # Buat DataFrame untuk summary
+                summary_df = pd.DataFrame(summary_data, 
+                                        columns=['Method', 'Fights'] + strike_categories)
+                st.dataframe(summary_df.style.format({
+                    'Head': '{:.1f}%',
+                    'Body': '{:.1f}%',
+                    'Leg': '{:.1f}%',
+                }))
+                
+            else:
+                st.warning("No data available for the selected methods and fight duration range.")
+        else:
+            st.info("Please select at least one method to compare.")
+
+
+    with col8:
+        st.subheader("Accuracy Position Comparison by Method and Fight Duration")
+
+        # Pilih multiple methods untuk comparison - TAMBAHKAN KEY UNIK
+        selected_methods_to = st.multiselect(
+            "Select Methods to Compare to",
+            options=list(filtered_df['method'].unique()),
+            default=list(filtered_df['method'].value_counts().head(3).index),
+            key="method_comparison_multiselect"  # KEY UNIK DITAMBAHKAN DI SINI
+        )
+
+        # Filter berdasarkan durasi pertandingan
+        min_time, max_time = st.slider(
+            "Select Fight Duration Range (seconds)",
+            min_value=int(filtered_df['match_time_sec'].min()),
+            max_value=int(filtered_df['match_time_sec'].max()),
+            value=(int(filtered_df['match_time_sec'].min()), int(filtered_df['match_time_sec'].max())),
+            key="fight_duration_slider_to"  # KEY UNIK DITAMBAHKAN DI SINI
+        )
+
+        if selected_methods_to:
+            # Filter data berdasarkan metode dan durasi
+            filtered_by_method = filtered_df[
+                (filtered_df['method'].isin(selected_methods_to)) &
+                (filtered_df['match_time_sec'] >= min_time) &
+                (filtered_df['match_time_sec'] <= max_time)
+            ]
+            
+            if len(filtered_by_method) > 0:
+                # Buat figure untuk semua methods
+                fig, ax = plt.subplots(figsize=(14, 8))
+                fig.patch.set_facecolor('none')
+                
+                # Warna untuk setiap method
+                colors = plt.cm.viridis(np.linspace(0, 1, len(selected_methods_to)))
+                
+                # Kategori strike
+                strike_categories = ['Distance', 'Clinch', 'Ground']
+                strike_columns = ['landed_dist_per', 'landed_clinch_per', 'landed_ground_per']
+                
+                # Posisi bar
+                x = np.arange(len(strike_categories))
+                width = 0.8 / len(selected_methods_to)
+                
+                # Plot untuk setiap method
+                for i, method in enumerate(selected_methods_to):
+                    method_df = filtered_by_method[filtered_by_method['method'] == method]
+                    
+                    if len(method_df) > 0:
+                        # Kumpulkan data accuracy untuk pemenang
+                        accuracy_data = {category: [] for category in strike_categories}
+                        
+                        for _, row in method_df.iterrows():
+                            # Tentukan apakah pemenang di red atau blue corner
+                            if row['winner'] == row['r_name']:
+                                # Pemenang adalah red corner
+                                prefix = 'r_'
+                            else:
+                                # Pemenang adalah blue corner
+                                prefix = 'b_'
+                            
+                            # Kumpulkan data accuracy untuk setiap kategori strike
+                            for category, column in zip(strike_categories, strike_columns):
+                                col_name = prefix + column
+                                if col_name in row and pd.notna(row[col_name]):
+                                    accuracy_data[category].append(row[col_name])
+                        
+                        # Hitung rata-rata untuk setiap kategori
+                        avg_accuracy = [np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
+                                    for category in strike_categories]
+                        
+                        # Plot bars
+                        bars = ax.bar(x + i * width, avg_accuracy, width,
+                                    label=f'{method} (n={len(method_df)})',
+                                    color=colors[i], alpha=0.8, edgecolor='white')
+                        
+                        # Tambahkan nilai di atas setiap bar
+                        for j, value in enumerate(avg_accuracy):
+                            if value > 0:  # Hanya tambahkan teks jika nilai > 0
+                                ax.text(x[j] + i * width, value + 0.5, f'{value:.1f}%', 
+                                    ha='center', va='bottom', color='white', fontweight='bold', fontsize=8)
+                
+                # Atur label dan judul
+                ax.set_xlabel('Strike Type', color='white', fontweight='bold', fontsize=12)
+                ax.set_ylabel('Accuracy Percentage (%)', color='white', fontweight='bold', fontsize=12)
+                ax.set_title(f'Strike Accuracy Comparison by Method\n(Fight Duration: {min_time}-{max_time} seconds)', 
+                            fontweight='bold', color='white', fontsize=16, pad=20)
+                ax.set_xticks(x + width * (len(selected_methods_to) - 1) / 2)
+                ax.set_xticklabels(strike_categories)
+                
+                # Tambahkan legend
+                ax.legend(frameon=False, labelcolor='white', bbox_to_anchor=(1.05, 1), loc='upper left')
+                
+                # Tambahkan grid
+                ax.grid(True, alpha=0.3, linestyle='--', axis='y')
+                
+                # Atur batas y-axis
+                max_val = 0
+                for method in selected_methods_to:
+                    method_df = filtered_by_method[filtered_by_method['method'] == method]
+                    if len(method_df) > 0:
+                        accuracy_data = {category: [] for category in strike_categories}
+                        
+                        for _, row in method_df.iterrows():
+                            if row['winner'] == row['r_name']:
+                                prefix = 'r_'
+                            else:
+                                prefix = 'b_'
+                            
+                            for category, column in zip(strike_categories, strike_columns):
+                                col_name = prefix + column
+                                if col_name in row and pd.notna(row[col_name]):
+                                    accuracy_data[category].append(row[col_name])
+                        
+                        method_max = max([np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
+                                        for category in strike_categories])
+                        max_val = max(max_val, method_max)
+                
+                ax.set_ylim(0, max_val * 1.2 if max_val > 0 else 100)
+                
+                # Atur style modern dengan teks putih
+                ax = set_modern_style(ax)
+                st.pyplot(fig, use_container_width=True)
+                
+                # Tampilkan statistik tambahan
+                st.write(f"**Analysis Summary:**")
+                st.write(f"- Total fights analyzed: {len(filtered_by_method)}")
+                st.write(f"- Fight duration range: {min_time} - {max_time} seconds")
+                
+                # Tabel rata-rata akurasi per metode
+                summary_data = []
+                for method in selected_methods_to:
+                    method_df = filtered_by_method[filtered_by_method['method'] == method]
+                    if len(method_df) > 0:
+                        accuracy_data = {category: [] for category in strike_categories}
+                        
+                        for _, row in method_df.iterrows():
+                            if row['winner'] == row['r_name']:
+                                prefix = 'r_'
+                            else:
+                                prefix = 'b_'
+                            
+                            for category, column in zip(strike_categories, strike_columns):
+                                col_name = prefix + column
+                                if col_name in row and pd.notna(row[col_name]):
+                                    accuracy_data[category].append(row[col_name])
+                        
+                        avg_values = [np.mean(accuracy_data[category]) if accuracy_data[category] else 0 
+                                    for category in strike_categories]
+                        summary_data.append([method, len(method_df)] + avg_values)
+                
+                # Buat DataFrame untuk summary
+                summary_df = pd.DataFrame(summary_data, 
+                                        columns=['Method', 'Fights'] + strike_categories)
+                st.dataframe(summary_df.style.format({
+                    'Distance': '{:.1f}%',
+                    'Clinch': '{:.1f}%',
+                    'Ground': '{:.1f}%',
+                }))
+                
+            else:
+                st.warning("No data available for the selected methods and fight duration range.")
+        else:
+            st.info("Please select at least one method to compare.")
 
 with tab3:
     st.header("Additional Information")
@@ -1061,7 +1442,7 @@ with tab3:
         
         # Atur style modern dengan teks putih
         ax1 = set_modern_style(ax1)
-        st.pyplot(fig1)
+        st.pyplot(fig1, use_container_width=True)
 
     with col2:
         st.subheader("Win Comparison: Red vs Blue Corner")
@@ -1107,7 +1488,7 @@ with tab3:
         
         # Atur style modern dengan teks putih
         ax2 = set_modern_style(ax2)
-        st.pyplot(fig2)
+        st.pyplot(fig2, use_container_width=True)
         # Modern dataframe display with white text
 # ... (rest of the code remains the same with similar changes for text colors)
 
@@ -1148,12 +1529,6 @@ with tab3:
     
 
 with tab4:
-    # Add the necessary imports at the top of the tab
-    import plotly.graph_objects as go
-    import plotly.express as px
-    import matplotlib.pyplot as plt
-    import numpy as np
-   
     st.header("🥊 Fighter Comparison")
 
     # Select fighters to compare
@@ -1275,7 +1650,7 @@ with tab4:
                 )),
             showlegend=True
         )
-        st.plotly_chart(fig_radar, width='stretch')  # Fixed: use width='stretch' instead of use_container_width=True
+        st.plotly_chart(fig_radar, use_container_width=True)
 
     # Detailed stats comparison
     st.markdown("### Detailed Statistics")
@@ -1327,7 +1702,7 @@ with tab4:
             title="Fighter Statistics Comparison",
             color_discrete_map={fighter1: "red", fighter2: "blue"}  # warna sesuai fighter
         )
-        st.plotly_chart(fig, width='stretch')  # Full width
+        st.plotly_chart(fig, use_container_width=True)  # Full width
 
     st.markdown("---")
     st.subheader("Strike Accuracy by Position")
@@ -1431,7 +1806,7 @@ with tab4:
         plt.tight_layout()
 
         # Display the chart
-        st.pyplot(fig_acc)
+        st.pyplot(fig_acc, use_container_width=True)
 
         # Additional accuracy metrics in columns
         st.markdown("### Detailed Accuracy Statistics")
@@ -1537,7 +1912,7 @@ with tab5:
                        f'{height:.1f}', ha='center', va='bottom', color='white', fontweight='bold')
             
             ax = set_modern_style(ax)
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=True)
     
     elif chart_type == "Pie Chart":
         column = st.selectbox("Select Column", options=custom_filtered_df.select_dtypes(include=['object']).columns)
@@ -1564,7 +1939,7 @@ with tab5:
             
             ax.set_title(title, fontweight='bold', color='white')
             ax = set_modern_style(ax)
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=True)
     
     elif chart_type == "Histogram":
         column = st.selectbox("Select Numeric Column", options=custom_filtered_df.select_dtypes(include=[np.number]).columns)
@@ -1584,7 +1959,7 @@ with tab5:
             ax.set_title(title, fontweight='bold', color='white')
             
             ax = set_modern_style(ax)
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=True)
     
     elif chart_type == "Scatter Plot":
         col1, col2 = st.columns(2)
