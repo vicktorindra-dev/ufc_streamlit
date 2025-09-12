@@ -704,7 +704,7 @@ with tab2:
         winner_accuracy_df = pd.DataFrame(winner_accuracy_data)
         
         # Hanya ambil kolom yang diinginkan (head, body, leg)
-        selected_columns = ['Distance', 'Clinch', 'Ground']
+        selected_columns = ['dist_accuracy', 'clinch_accuracy', 'ground_accuracy']
         filtered_accuracy_df = winner_accuracy_df[selected_columns]
         
         # Hitung rata-rata untuk setiap kategori yang dipilih
@@ -715,7 +715,7 @@ with tab2:
         fig2.patch.set_facecolor('none')
         
         # Kategori dan nilai (hanya head, body, leg)
-        categories = ['dist_accuracy', 'clinch_accuracy', 'ground_accuracy']
+        categories = ['Distance', 'Clinch', 'Ground']
         values = avg_accuracy.values
         
         # Buat bar chart
