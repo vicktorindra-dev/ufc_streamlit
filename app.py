@@ -82,9 +82,9 @@ def set_modern_style(ax, transparent=True):
 @st.cache_data
 def load_data():
     # Ganti dengan path file Excel Anda
-    #url = "https://github.com/vicktorindra-dev/ufc_streamlit/raw/refs/heads/main/data.xlsx"
-    df = pd.read_excel(r"C:\Users\Indra\Desktop\ufc\data3.xlsx")
-    #df = pd.read_excel(url)
+    url = "https://github.com/vicktorindra-dev/ufc_streamlit/raw/refs/heads/main/data.xlsx"
+    #df = pd.read_excel(r"C:\Users\Indra\Desktop\ufc\data3.xlsx")
+    df = pd.read_excel(url)
     return df
     
 df = load_data()
