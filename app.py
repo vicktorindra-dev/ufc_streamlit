@@ -591,7 +591,7 @@ with tab2:
     ax1.set_xticklabels(stance_counts.index, rotation=45, ha='right')
     ax1.set_xlabel('Fighting Stance', color='white', fontweight='bold', fontsize=12)
     ax1.set_ylabel('Frequency', color='white', fontweight='bold', fontsize=12)
-    ax1.set_title('Distribution of Fighter Stances', fontweight='bold', color='white', fontsize=14, pad=20)
+    ax1.set_title('Distribution of Fighter Stances', fontweight='bold', color='white', fontsize=12, pad=20)
         
         # Tambahkan nilai di atas setiap bar
     for bar, value in zip(bars, stance_counts.values):
@@ -704,7 +704,7 @@ with tab2:
         winner_accuracy_df = pd.DataFrame(winner_accuracy_data)
         
         # Hanya ambil kolom yang diinginkan (head, body, leg)
-        selected_columns = ['dist_accuracy', 'clinch_accuracy', 'ground_accuracy']
+        selected_columns = ['Distance', 'Clinch', 'Ground']
         filtered_accuracy_df = winner_accuracy_df[selected_columns]
         
         # Hitung rata-rata untuk setiap kategori yang dipilih
